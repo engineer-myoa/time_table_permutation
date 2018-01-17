@@ -3,19 +3,26 @@ from __future__ import print_function
 
 from collections import namedtuple
 import re
-import itertools
-import copy
+import itertools, copy
+from configparser import ConfigParser
 
 import pprint # for debug
+import sys, codecs
 
-import sys
 python_ver = (3,)
 isPython3 = False
 if sys.version_info >= python_ver:
     isPython3 = True
-    
+
+ClassData = namedtuple("ClassType", ["classname", "timetable", "isSep"])
+
 timeTable = [ [ None for xr in range(12)]  for xr in range(7) ] # 3.4 호환
 rawTimeTable = [ [ None for xr in range(12)]  for xr in range(7) ] # 3.4 호환
+
+classList = []
+
+fixedList = []
+sepList = {}
 
 def timeTableCast(elem, baseTimeTable, rawTimeTable):
     #pprint.pprint(baseTimeTable)
@@ -46,9 +53,8 @@ def timeTableCast(elem, baseTimeTable, rawTimeTable):
 
         return None, None
 
-
-
 def parseSubjectTime(string):
+
     string = string.replace("월","0")
     string = string.replace("화","1")
     string = string.replace("수","2")
@@ -56,12 +62,19 @@ def parseSubjectTime(string):
     string = string.replace("금","4")
     string = string.replace("토","5")
     string = string.replace("일","6")
+
+    string = string.replace("Mon","0")
+    string = string.replace("Tue","1")
+    string = string.replace("Wed","2")
+    string = string.replace("Thu","3")
+    string = string.replace("Fri","4")
+    string = string.replace("Sat","5")
+    string = string.replace("Sun","6")
     return re.findall("(?:(\d\d)\s*)+?",string) # spliting
     #return	re.findall("(([A-G]\d)\s*)+?", string)
 
 
-ClassData = namedtuple("ClassType", ["classname", "timetable", "isSep"])
-
+"""
 a1 = ClassData("과목1", "월5월6목5금4", 1)
 a2 = ClassData("과목1", "월7월8목6금5", 2)
 
@@ -78,9 +91,38 @@ e1 = ClassData("과목5", "화8화9수5", 0)
 f1 = ClassData("과목6", "화5화6화7", 0)
 
 classList = [a1,a2, b1,b2, c1,c2, d1,d2, e1, f1]
+"""
 
-fixedList = []
-sepList = {}
+def initApp():
+    config = ConfigParser()
+    #config.read("class.conf")
+    config.read_file(codecs.open("class.conf", "r", "utf8"))
+
+    for i in config.sections():
+        section = config[i]
+        subjectName = section.get("subjectName")
+        classTime = section.get("classTime")
+        isSep = section.getboolean("isSep")
+        if isSep == True:
+            isSep = int(section.get("sepNo"))
+        else:
+            isSep = 0
+        
+        classList.append( ClassData(subjectName, classTime, isSep) )
+
+
+#  ------------------------------------------------------------
+# --AAAAAAAAAA--AAAAAAAAAA------AA-------AAAAAA-----AAAAAAAAAA--
+# --AA--------------AA---------AAAA------AA----AA-------AA------
+# --AA--------------AA--------AA--AA-----AA------AA-----AA------
+# --AAAAAAAAAA------AA-------AA----AA----AAAAAAAA-------AA------
+# ----------AA------AA------AAAAAAAAAA---AA----AA-------AA------
+# ----------AA------AA-----AA--------AA--AA-----AA------AA------
+# --AAAAAAAAAA------AA-----AA--------AA--AA------AA-----AA------
+#  ------------------------------------------------------------
+
+
+initApp()
 
 for i in classList:
     if(i.isSep == 0):
