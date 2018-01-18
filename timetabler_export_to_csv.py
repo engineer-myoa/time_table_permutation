@@ -19,20 +19,12 @@ class TimeTabler:
         if sys.version_info >= python_ver:
             self.isPython3 = True
 
-        self.timeTable = [ [ None for xr in range(12)]  for xr in range(7) ] # 3.4 호환
-        self.rawTimeTable = [ [ None for xr in range(12)]  for xr in range(7) ] # 3.4 호환
-
-        self.classList = []
-
-        self.fixedList = []
-        self.sepList = {}
-        self.sepList2 = []
-
-        self.finalList = []
+        self.clear()
 
     def clear(self):
-        self.timeTable = [ [ None for xr in range(12)]  for xr in range(7) ] # 3.4 호환
-        self.rawTimeTable = [ [ None for xr in range(12)]  for xr in range(7) ] # 3.4 호환
+        # 0~12교시까지 지원
+        self.timeTable = [ [ None for xr in range(13)]  for xr in range(7) ] # 3.4 호환
+        self.rawTimeTable = [ [ None for xr in range(13)]  for xr in range(7) ] # 3.4 호환
 
         self.classList = []
 
@@ -91,7 +83,7 @@ class TimeTabler:
             return None, None
 
     
-    def loadConfig(self, filename="E:\\dev\\DEV_100SERVER\\time_tabler\\class.conf"):
+    def loadConfig(self, filename="class.conf"):
         config = ConfigParser()
         config.read_file(codecs.open(filename, "r", "utf8"))
 
@@ -173,16 +165,38 @@ class TimeTabler:
                 print()
             print("=====================================================")
     
-    def exportCsv(self, filepath):
+    def exportCsv(self, filepath="output.csv", visibleTime=True):
+        if visibleTime == True:
+            titleRow = ["", "월","화","수","목","금","토","일"]
+        else:
+            titleRow = ["월","화","수","목","금","토","일"]
+
+
         try:
-            pass
+            f = open(filepath, "w", newline="\n") # os별 다르게 설정하자..
+            import csv
+            csvWriter = csv.writer(f, delimiter=",")
+            for item in self.finalList:
+                csvWriter.writerow(titleRow)
+                for i in range(len(item[0])):
+                    if visibleTime == True:
+                        csvWriter.writerow( [str(i)+"교시", item[0][i], item[1][i], item[2][i], item[3][i], item[4][i], item[5][i], item[6][i] ] )
+                    else:
+                        csvWriter.writerow( [ item[0][i], item[1][i], item[2][i], item[3][i], item[4][i], item[5][i], item[6][i] ] )
+
+                csvWriter.writerow([])
+                
+            
+            # finalList구조 : [ [월요일], [화요일], ... ], [ [월요일], [화요일], ... ], ...
+            
+            f.close()
         except Exception as e:
             print(e)
             pass
 
 #  ------------------------------------------------------------
-# --AAAAAAAAAA--AAAAAAAAAA------AA-------AAAAAA-----AAAAAAAAAA--
-# --AA--------------AA---------AAAA------AA----AA-------AA------
+# --AAAAAAAAAA--AAAAAAAAAA------AA-------AAAAAAAA---AAAAAAAAAA--
+# --AA--------------AA---------AAAA------AA------AA-----AA------
 # --AA--------------AA--------AA--AA-----AA------AA-----AA------
 # --AAAAAAAAAA------AA-------AA----AA----AAAAAAAA-------AA------
 # ----------AA------AA------AAAAAAAAAA---AA----AA-------AA------
@@ -191,6 +205,7 @@ class TimeTabler:
 #  ------------------------------------------------------------
 
 tt = TimeTabler()
-tt.loadConfig()
+tt.loadConfig("E:\\dev\\DEV_100SERVER\\time_tabler\\class.conf")
 tt.classParsing()
-tt.pprint()
+#tt.pprint()
+tt.exportCsv("output.csv", True)
